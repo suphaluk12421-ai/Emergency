@@ -1563,5 +1563,33 @@
             switchTab('gallery');
         }
     </script>
+    <script>
+      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwH9QeISl5t82PZcepkAC6flC-p5d45bBxyIrv413qeuTjQfdKtQEJ48YV9nsHsFHCH/exec';
+
+      // เลือก form จาก id ในหน้าเว็บของคุณ (เช่น id="emergencyForm" หรือตามที่ในเว็บคุณตั้งไว้)
+      const form = document.querySelector('form'); 
+
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const formData = new FormData(form);
+
+          fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.json())
+          .then(data => {
+            alert('บันทึกข้อมูลสำเร็จ!');
+            form.reset();
+          })
+          .catch(err => {
+            console.error(err);
+            alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
+          });
+        });
+      }
+    </script>
 </body>
 </html>
