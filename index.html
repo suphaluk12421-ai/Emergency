@@ -1563,33 +1563,55 @@
             switchTab('gallery');
         }
     </script>
-    <script>
-      const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwH9QeISl5t82PZcepkAC6flC-p5d45bBxyIrv413qeuTjQfdKtQEJ48YV9nsHsFHCH/exec';
+   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw4MkwBFyWLlQrDFixABYSaSCfX7_SrbG9qTcAWyMCPKK3mKCo6kPejpBz6_OdokS23/exec';
+const form = document.querySelector('form');
 
-      // เลือก form จาก id ในหน้าเว็บของคุณ (เช่น id="emergencyForm" หรือตามที่ในเว็บคุณตั้งไว้)
-      const form = document.querySelector('form'); 
+if (form) {
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-      if (form) {
-        form.addEventListener('submit', function(e) {
-          e.preventDefault();
+    const fileInput = document.querySelector('input[type="file"]');
+    const file = fileInput && fileInput.files.length > 0 ? fileInput.files[0] : null;
 
-          const formData = new FormData(form);
+    let fileData = null;
 
-          fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: formData
-          })
-          .then(res => res.json())
-          .then(data => {
-            alert('บันทึกข้อมูลสำเร็จ!');
-            form.reset();
-          })
-          .catch(err => {
-            console.error(err);
-            alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
-          });
+    // แปลงรูปเป็น Base64
+    if (file) {
+      fileData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve({
+          base64: reader.result.split(',')[1],
+          type: file.type,
+          name: file.name
         });
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // รวบรวมข้อมูลส่งไป Apps Script
+    const payload = {
+      name: document.querySelector('#nameInput')?.value || '',
+      phone: document.querySelector('#phoneInput')?.value || '',
+      file: fileData
+    };
+
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        alert('บันทึกข้อมูลสำเร็จ!');
+        form.reset();
+      } else {
+        alert('เกิดข้อผิดพลาด: ' + data.message);
       }
+    })
+    .catch(err => console.error('Error:', err));
+  });
+}
     </script>
 </body>
 </html>
