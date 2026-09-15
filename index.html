@@ -1563,31 +1563,78 @@
             switchTab('gallery');
         }
     </script>
-  
     <script>
-      const SCRIPT_URL = 'วhttps://script.google.com/macros/s/AKfycbwYQmJNW0oLr2cutMnqZMcH7RyPcXUzCnXNbKiGlXjSKbJUmp4ylqkHzcIOnBWiZCOr/exec';
-      const form = document.getElementById('work-form'); 
-      if (form) {
-        form.addEventListener('submit', function(e) {
-          e.preventDefault();
+  <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>อัปโหลดไฟล์เข้า Google Drive</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .upload-box { max-width: 400px; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .btn { margin-top: 10px; padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; width: 100%; }
+        #status { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
 
-          const formData = new FormData(form);
+<div class="upload-box">
+    <h3>อัปโหลดไฟล์ของคุณ</h3>
+    <input type="file" id="fileInput">
+    <button class="btn" onclick="uploadFile()">เริ่มอัปโหลด</button>
+    <div id="status"></div>
+</div>
 
-          fetch(SCRIPT_URL, {
+<script>
+function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    const statusDiv = document.getElementById('status');
+    
+    // ตรวจสอบว่าผู้ใช้งานเลือกไฟล์หรือยัง
+    if (fileInput.files.length === 0) {
+        statusDiv.innerHTML = "กรุณาเลือกไฟล์ก่อนครับ";
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    
+    statusDiv.innerHTML = "กำลังเตรียมไฟล์...";
+    
+    reader.onload = function(e) {
+        // แปลงไฟล์เป็น Base64
+        const base64String = e.target.result.split(',')[1];
+        
+        const payload = {
+            fileName: file.name,
+            mimeType: file.type,
+            base64: base64String
+        };
+        
+        statusDiv.innerHTML = "กำลังอัปโหลดไฟล์เข้า Google Drive...";
+        
+        // แทนที่ข้อความด้านล่างด้วย Web App URL ที่ได้จาก Google Apps Script
+        const webAppUrl = "https://script.google.com/macros/s/AKfycbxBn27Ti0s91FpuZGk2J-jIWpLUdqTPsSSzcw1_gqc19d4G6oFwaDqJLJuc0c-9OKgw/exec"; 
+        
+        fetch(webAppUrl, {
             method: 'POST',
-            body: formData
-          })
-          .then(res => res.json())
-          .then(data => {
-            alert('บันทึกข้อมูลสำเร็จ!');
-            form.reset();
-          })
-          .catch(err => {
-            console.error(err);
-            alert('เกิดข้อผิดพลาดในการส่งข้อมูล');
-          });
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.status === "success") {
+                statusDiv.innerHTML = "<span style='color:green;'>อัปโหลดสำเร็จเรียบร้อยแล้ว! <br><a href='" + data.fileUrl + "' target='_blank'>ดูไฟล์</a></span>";
+            } else {
+                statusDiv.innerHTML = "<span style='color:red;'>เกิดข้อผิดพลาด: " + data.message + "</span>";
+            }
+        })
+        .catch(error => {
+            statusDiv.innerHTML = "<span style='color:red;'>การเชื่อมต่อล้มเหลว: " + error + "</span>";
         });
-      }
-    </script>
+    };
+    
+    reader.readAsDataURL(file);
+}
+</script>
 </body> 
 </html>
